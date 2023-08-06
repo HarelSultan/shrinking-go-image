@@ -1,0 +1,18 @@
+# Using Alpine Linux instead of Debian
+FROM golang:1.10-alpine AS build-stage
+
+# Installing binutils in order to discard symbols with strip
+RUN apk update && apk add binutils
+
+# Copying and building go application
+COPY app.go .
+RUN go build -o /app app.go
+
+RUN strip /app
+
+# Using scratch so the application binary is the only file in the resulting image
+FROM scratch
+
+# Using multi-staging in order to exclude unnecessary files
+COPY --from=build-stage /app /
+CMD [ "/app" ]
